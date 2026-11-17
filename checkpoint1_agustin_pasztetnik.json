@@ -1,0 +1,307 @@
+{
+  "name": "Agente UX Findings v1",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a2b91448-68df-4563-aae4-13cd5785f889",
+      "name": "When chat message received",
+      "webhookId": "27de6e04-2ef9-44a7-8d15-12b7bb613ca0"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        192,
+        240
+      ],
+      "id": "ef054e50-f08a-480a-bb26-fb04c638265f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-5-5",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 5.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        0,
+        224
+      ],
+      "id": "3831f708-218f-4ab9-b6f6-4891ade2254c",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "O4BCyAj7IMpC0nf8",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Instrucción del usuario: {{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# ROL\nSos el Asistente de UX Findings del equipo de diseño. Respondés consultas sobre los hallazgos de las sesiones de user testing registrados en la planilla de findings.\n\n# ÁMBITO\nSolo respondés sobre los findings de la planilla. No tenés autorización para:\n- Crear, modificar, cerrar ni borrar findings.\n- Cambiar estados, niveles de severidad ni ningún otro dato.\n- Tomar decisiones de release, priorización o postergación.\n- Responder temas ajenos a los findings.\n\n# OBJETIVO\nDar respuestas breves y precisas, de no más de 500 caracteres, basadas exclusivamente en los datos de la planilla, para que el equipo entienda rápido el estado de los findings.\nRespondé en español. Mantené en su idioma original los nombres de módulos, estados, niveles y títulos de findings.\n\n# REGLAS DE USO DE HERRAMIENTAS\n- Consultá siempre la planilla antes de responder sobre findings, aunque el dato aparezca en la conversación previa: los datos pueden haber cambiado.\n- Si no indican la versión, consultá 1.10.0.\n- Si el dato no está en la planilla, decilo. Nunca inventes findings, estados ni recomendaciones.\n- Cuando menciones un finding, indicá su número (Finding #).\n\n# PROTOCOLO DE ESCALAMIENTO\nSi la consulta pide cambiar o decidir algo (por ejemplo: \"cerrá el finding 22\", \"cambiá el finding 7 a Level 1\", \"¿podemos lanzar la versión con estos pendientes?\"):\n- No consultes la planilla ni respondas el fondo de la consulta.\n- Marcá \"escalar\" como true.\n- En \"respuesta\" escribí exactamente: \"Tu consulta requiere revisión humana. La derivo al equipo responsable.\"\nEn cualquier otro caso, marcá \"escalar\" como false.\n\n# FORMATO DE SALIDA\nRespondé siempre con un JSON con dos campos:\n- \"respuesta\": el texto para el usuario.\n- \"escalar\": true o false.",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        336,
+        0
+      ],
+      "id": "c818cca6-1567-4d19-a361-4d34bb718b80",
+      "name": "Asistente UX Findings"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta en modo solo lectura la planilla de findings de user testing. Cada pestaña corresponde a una versión del producto: \"1.10.0\" (con datos) y \"1.11.0\" (nueva, puede estar vacía). Devuelve todas las filas de la pestaña indicada.\n\nColumnas: Module, Sub-module, Action, Finding #, Finding Title, Status (Pending, In Review, Resolved, Not applicable), Design System (ODSU, OneDS), Jira ID, Level (Level 2 es el más grave, luego Level 1 y Remark), Issue Description, Recommendation, Usability Heuristic y Notes.\n\nUsala cuando el usuario pregunte por findings: estado, severidad, módulo, cantidad, descripción, recomendación, heurística o ticket asociado.\n\nNo la uses para saludos, preguntas generales ni consultas que pidan cambiar o decidir algo, porque esas se escalan sin consultar la planilla.\n\nSi no indican versión, consultá 1.10.0.",
+        "documentId": {
+          "__rl": true,
+          "value": "14JuNb9b8C4Q01iWtwjlz_SSUFYDMkYaTQNsBwxjTpqE",
+          "mode": "list",
+          "cachedResultName": "ECS 1.10 - User Testing Findings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14JuNb9b8C4Q01iWtwjlz_SSUFYDMkYaTQNsBwxjTpqE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', `Nombre exacto de la pestaña de la versión, por ejemplo 1.10.0 o 1.11.0.`, 'string') }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        224
+      ],
+      "id": "c349383b-fe43-40c1-aebb-44acb9165eaf",
+      "name": "Consultar findings",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dYmpRwzsu7nuUZfT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"respuesta\": \"Texto de la respuesta\", \"escalar\": false }"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        224
+      ],
+      "id": "e20348a3-0c04-4335-824e-82b1869d3fed",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "f0506d89-e306-46a4-b080-98a5592993cc",
+              "leftValue": "={{ $json.output.escalar }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "10f604f3-914f-43a6-8b07-68af8810d8ae",
+      "name": "¿Escalar?"
+    },
+    {
+      "parameters": {
+        "sendTo": "agupasztetnik@gmail.com",
+        "subject": "[ESCALAMIENTO] Consulta derivada a revisión humana",
+        "emailType": "text",
+        "message": "=Consulta del usuario: {{ $('When chat message received').item.json.chatInput }} \nRespuesta generada: {{ $('Asistente UX Findings').item.json.output.respuesta }} \nRequiere revisión humana: {{ $('Asistente UX Findings').item.json.output.escalar }}\nEjecución: {{ $execution.id }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        -176
+      ],
+      "id": "02069c11-7b92-43e3-85ab-cc7a7236162f",
+      "name": "Aviso de escalamiento",
+      "webhookId": "9133315c-2363-4b3b-ac34-9527e5e2cb68",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7ei02kzLzObxhoVX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agupasztetnik@gmail.com",
+        "subject": "[LOG] Consulta resuelta por el agente",
+        "emailType": "text",
+        "message": "=Consulta del usuario: {{ $('When chat message received').item.json.chatInput }} \nRespuesta generada: {{ $('Asistente UX Findings').item.json.output.respuesta }} \nRequiere revisión humana: {{ $('Asistente UX Findings').item.json.output.escalar }}\nEjecución: {{ $execution.id }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        160
+      ],
+      "id": "c4d01433-13e6-4e32-9b0f-aa173ae19034",
+      "name": "Log de consulta",
+      "webhookId": "9133315c-2363-4b3b-ac34-9527e5e2cb68",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7ei02kzLzObxhoVX",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Asistente UX Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Asistente UX Findings",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Asistente UX Findings",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar findings": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente UX Findings",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Asistente UX Findings",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asistente UX Findings": {
+      "main": [
+        [
+          {
+            "node": "¿Escalar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Escalar?": {
+      "main": [
+        [
+          {
+            "node": "Aviso de escalamiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log de consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "ad33b9f2-98ac-4342-819f-54d7e6b8f8a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f4330ef9fa9731bde7962ff7b40874cffe4036127ef7259bb8211e52f6e5d448"
+  },
+  "nodeGroups": [],
+  "id": "4K74u400HOcwgzxk",
+  "tags": []
+}
